@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>헬스장 그룹수업 출석관리</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <div id="app"></div>
+
+    <script>
+        // 아이콘 생성 함수
+        function createIcon(name, className = "w-5 h-5") {
+            const iconElement = document.createElement('i');
+            iconElement.setAttribute('data-lucide', name);
+            iconElement.className = className;
+            return iconElement;
+        }
+
+        // 수업별 고정 회원 데이터
+        let classMembers = {
+            '월-09:00-다이어트댄스-윤연재': ['강순덕', '강옥순', '곽정순', '국진', '권인순', '김경숙', '김금주', '김민선', '김보경', '김영미', '김은자', '김혜진', '나정자', '박난희', '박하성', '백문희', '서영선', '손윤자', '송경남', '안효정', '엄정순', '유호영', '윤상진', '이숙이', '이순애', '이윤희', '이종금', '이충남', '임경란', '임정숙', '전예빈', '정미', '정애란', '정옥영', '정태희', '조선녀', '최명희', '최영경'],
+            '월-10:00-요가-심희경': ['강옥순', '국진', '김금주', '김봉순', '김영미', '김은자', '김혜진', '문은경', '박하성', '백문희', '백인옥', '서순임', '서청순', '손용자', '신동주', '안효정', '엄정순', '윤상진', '이연행', '이윤희', '이충남', '임경란', '장승원', '전재은', '정두선', '정미', '정옥영', '조선녀'],
+            '화-09:00-요가-심희경': ['강순덕', '강옥순', '국진', '김금주', '김봉순', '김순례', '김은자', '김혜진', '문은경', '백문희', '서순임', '서청순', '손용자', '엄정순', '윤상진', '이순애', '이충남', '임경란', '장승원', '전예빈', '정두선', '정태희', '조선녀', '최명희'],
+            '화-10:00-줌바-JESSI': ['강순덕', '국진', '권인순', '김경숙', '김금주', '김나영', '김민선', '김보경', '김옥선', '김옥순', '김유식', '김은자', '김정혜', '김혜진', '나정자', '박난희', '박소현', '박지연', '박하성', '백문희', '서순임', '서연선', '서청순', '송경란', '양정인', '엄정순', '오연순', '유아람', '윤상진', '윤은주', '이보라', '이숙이', '이순애', '이윤희', '이은미', '임경란', '장순희', '전예빈', '정애란', '정태희', '조명화', '조선녀', '최명희', '최영경'],
+            '화-11:00-줌바-임유나': ['김덕자', '김재옥', '나원자', '노미희', '문은경', '박미숙', '박연희', '배은심', '송주원', '유연이', '이경희', '이연행', '전승희', '정옥경', '정재은', '채승옥', '추인숙', '홍정희'],
+            '수-09:00-다이어트댄스-윤연재': ['강순덕', '강옥순', '국진', '김금주', '김나영', '김민선', '김보경', '김순례', '김혜진', '나정자', '박난희', '박하성', '백문희', '손영', '송경남', '엄정순', '유호영', '이숙이', '이순애', '이윤희', '이충남', '임경란', '전예빈', '정애란', '정옥영', '정태희', '조선녀', '최명희', '최영경'],
+            '수-10:00-킥앤근력-김충식': ['강순덕', '강옥순', '김갑자', '김금주', '김나영', '김덕자', '김보경', '김봉순', '김은자', '김재옥', '김정혜', '김혜진', '나원자', '나정자', '박선혜', '박하성', '배은심', '백문희', '백인옥', '서순임', '서청순', '유연이', '이귀숙', '이윤희', '이혜열', '임경란', '전예빈', '정두선', '정옥영', '정우영', '정태희', '조선녀', '홍정희'],
+            '목-09:00-요가-심희경': ['강순덕', '강옥순', '김금주', '김보경', '김순례', '김은자', '김혜진', '문은경', '백문희', '서순임', '서청순', '손용자', '엄정순', '윤상진', '이순애', '이연행', '이충남', '임경란', '장승원', '전예빈', '정두선', '정태희', '조선녀', '최명희'],
+            '목-10:00-줌바-JESSI': ['강순덕', '강옥순', '국진', '김경숙', '김금주', '김나영', '김민선', '김보경', '김순례', '김순이', '김영미', '김옥선', '김유식', '김은자', '김정혜', '김혜진', '나정자', '박난희', '박소현', '박지연', '박하성', '백문희', '송경남', '양정인', '엄정순', '유아람', '윤은주', '이숙이', '이순애', '이윤희', '이은미', '임경란', '장순희', '전예빈', '정애란', '정태희', '조명화', '조선녀', '최명희', '최영경', '서영선', '이보라', '오연순', '정미', '윤상진', '김현숙'],
+            '목-11:00-줌바-임유나': ['김덕자', '김재옥', '나원자', '노미희', '문은경', '박미경', '박미숙', '박연희', '박하성', '배은심', '송주원', '유연이', '이경희', '이연행', '이희수', '정옥영', '채승옥', '추인숙', '홍정희'],
+            '금-09:00-다이어트댄스-윤연재': ['강순덕', '강옥순', '국진', '권정숙', '김경숙', '김금주', '김나영', '김민선', '김보경', '김순례', '김영미', '김영숙', '김은자', '김혜진', '나정자', '박난희', '백문희', '서영선', '손용자', '송경남', '엄정순', '윤상진', '이숙이', '이순애', '이운숙', '이윤희', '이충남', '임경란', '장순희', '전예빈', '정미', '정애란', '정옥영', '정태희', '조선녀', '최명희', '최영경'],
+            '금-10:00-근력-이아란': ['강순덕', '강옥순', '김금주', '김나영', '김덕자', '김보경', '김봉순', '김영미', '김은자', '김혜진', '나원자', '박선혜', '박하성', '배은심', '백문희', '백인옥', '안효정', '이귀숙', '이연행', '이충남', '임경란', '전예빈', '정미', '정옥영', '정재은', '정태희', '조선녀', '홍정희', '조명화']
+        };
+
+        // 상태 관리
+        let state = {
+            selectedDate: new Date().toISOString().split('T')[0],
+            selectedClass: '',
+            attendance: {},
+            attendanceHistory: JSON.parse(localStorage.getItem('attendanceHistory') || '{}'),
+            sortOrder: 'korean',
+            showAddMember: false,
+            newMemberName: '',
+            showAttendanceList: false
+        };
+
+        // 로컬 스토리지에서 회원 데이터 불러오기
+        const savedMembers = localStorage.getItem('classMembers');
+        if (savedMembers) {
+            classMembers = JSON.parse(savedMembers);
+        }
+
+        // 데이터 저장
+        function saveData() {
+            localStorage.setItem('classMembers', JSON.stringify(classMembers));
+            localStorage.setItem('attendanceHistory', JSON.stringify(state.attendanceHistory));
+        }
+
+        // 수업 목록 생성
+        function getClassList() {
+            return Object.keys(classMembers).map(key => {
+                const [day, time, className, instructor] = key.split('-');
+                return { key, display: `${day} ${time} ${className} (${instructor})` };
+            });
+        }
+
+        // 요일별 수업 그룹화
+        function getClassesByDay() {
+            const days = ['월', '화', '수', '목', '금'];
+            const classList = getClassList();
+            return days.map(day => ({
+                day,
+                classes: classList.filter(cls => cls.key.startsWith(day))
+            }));
+        }
+
+        // 요일 표시
+        function getDayOfWeek(dateString) {
+            const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+            const date = new Date(dateString);
+            return days[date.getDay()];
+        }
+
+        // 현재 회원 목록
+        function getCurrentMembers() {
+            return state.selectedClass ? classMembers[state.selectedClass] || [] : [];
+        }
+
+        // 정렬된 회원 목록
+        function getSortedMembers() {
+            const members = getCurrentMembers();
+            if (state.sortOrder === 'korean') {
+                return [...members].sort((a, b) => a.localeCompare(b, 'ko-KR'));
+            }
+            return [...members].sort();
+        }
+
+        // 출석한 회원 목록
+        function getAttendedMembers() {
+            return getCurrentMembers().filter(member => state.attendance[member]);
+        }
+
+        // 출석 통계
+        function getAttendanceStats() {
+            const total = getCurrentMembers().length;
+            const present = Object.values(state.attendance).filter(Boolean).length;
+            return { total, present, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
+        }
+
+        // 이벤트 핸들러들
+        function handleDateChange(event) {
+            state.selectedDate = event.target.value;
+            loadAttendanceData();
+            render();
+        }
+
+        function handleClassChange(event) {
+            state.selectedClass = event.target.value;
+            loadAttendanceData();
+            render();
+        }
+
+        function loadAttendanceData() {
+            if (state.selectedDate && state.selectedClass) {
+                const key = `${state.selectedDate}_${state.selectedClass}`;
+                state.attendance = state.attendanceHistory[key] || {};
+            }
+        }
+
+        function toggleAttendance(memberName) {
+            state.attendance[memberName] = !state.attendance[memberName];
+            render();
+        }
+
+        function selectAll() {
+            const members = getSortedMembers();
+            const allSelected = members.every(member => state.attendance[member]);
+            members.forEach(member => {
+                state.attendance[member] = !allSelected;
+            });
+            render();
+        }
+
+        function saveAttendance() {
+            if (!state.selectedDate || !state.selectedClass) {
+                alert('날짜와 수업을 선택해주세요.');
+                return;
+            }
+
+            const key = `${state.selectedDate}_${state.selectedClass}`;
+            state.attendanceHistory[key] = { ...state.attendance };
+            saveData();
+            alert('출석이 저장되었습니다!');
+        }
+
+        function addMember() {
+            if (!state.selectedClass) {
+                alert('수업을 먼저 선택해주세요.');
+                return;
+            }
+            
+            if (state.newMemberName.trim() && !classMembers[state.selectedClass].includes(state.newMemberName.trim())) {
+                classMembers[state.selectedClass].push(state.newMemberName.trim());
+                saveData();
+                state.newMemberName = '';
+                state.showAddMember = false;
+                alert(`${state.newMemberName.trim()} 회원이 추가되었습니다.`);
+                render();
+            } else if (classMembers[state.selectedClass].includes(state.newMemberName.trim())) {
+                alert('이미 등록된 회원입니다.');
+            }
+        }
+
+        function removeMember(memberName) {
+            if (confirm(`${memberName} 회원을 이 수업에서 삭제하시겠습니까?`)) {
+                classMembers[state.selectedClass] = classMembers[state.selectedClass].filter(m => m !== memberName);
+                delete state.attendance[memberName];
+                saveData();
+                alert(`${memberName} 회원이 삭제되었습니다.`);
+                render();
+            }
+        }
+
+        function copyAttendanceList() {
+            const attendedMembers = getAttendedMembers();
+            const attendanceText = attendedMembers.join('\n');
+            
+            navigator.clipboard.writeText(attendanceText).then(() => {
+                alert('출석 명단이 복사되었습니다!');
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = attendanceText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('출석 명단이 복사되었습니다!');
+            });
+        }
+
+        // 렌더링 함수
+        function render() {
+            const classList = getClassList();
+            const stats = getAttendanceStats();
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="min-h-screen bg-gray-50 p-4">
+                    <div class="max-w-4xl mx-auto">
+                        <!-- 헤더 -->
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div class="flex items-center gap-3 mb-6">
+                                <i data-lucide="users" class="w-8 h-8 text-blue-600"></i>
+                                <h1 class="text-2xl font-bold text-gray-800">그룹수업 출석관리</h1>
+                            </div>
+
+                            <!-- 날짜 및 수업 선택 -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i data-lucide="calendar" class="w-4 h-4 inline mr-1"></i>
+                                        수업 날짜
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value="${state.selectedDate}"
+                                        onchange="handleDateChange(event)"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    ${state.selectedDate ? `<div class="mt-2 text-sm text-blue-600 font-medium">${getDayOfWeek(state.selectedDate)}</div>` : ''}
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">수업 선택</label>
+                                    <select
+                                        onchange="handleClassChange(event)"
+                                        class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="">수업을 선택하세요</option>
+                                        ${getClassesByDay().map(dayGroup => `
+                                            <optgroup label="${dayGroup.day}요일">
+                                                ${dayGroup.classes.map(cls => `
+                                                    <option value="${cls.key}" ${state.selectedClass === cls.key ? 'selected' : ''}>${cls.display}</option>
+                                                `).join('')}
+                                            </optgroup>
+                                        `).join('')}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${state.selectedClass ? `
+                        <!-- 수업 정보 -->
+                        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800">수업 정보</h2>
+                                <div class="flex gap-2">
+                                    <select
+                                        onchange="state.sortOrder = event.target.value; render();"
+                                        class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    >
+                                        <option value="korean" ${state.sortOrder === 'korean' ? 'selected' : ''}>가나다순</option>
+                                        <option value="alphabetic" ${state.sortOrder === 'alphabetic' ? 'selected' : ''}>ABC순</option>
+                                    </select>
+                                    <button
+                                        onclick="state.showAddMember = !state.showAddMember; render();"
+                                        class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                    >
+                                        <i data-lucide="users" class="w-4 h-4"></i>
+                                        회원 추가
+                                    </button>
+                                </div>
+                            </div>
+
+                            ${state.showAddMember ? `
+                            <div class="mb-4 p-4 bg-green-50 rounded-lg">
+                                <div class="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value="${state.newMemberName}"
+                                        oninput="state.newMemberName = event.target.value"
+                                        onkeypress="if(event.key === 'Enter') addMember()"
+                                        placeholder="회원 이름을 입력하세요"
+                                        class="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
+                                    <button
+                                        onclick="addMember()"
+                                        class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                    >
+                                        추가
+                                    </button>
+                                    <button
+                                        onclick="state.showAddMember = false; render();"
+                                        class="px-4 py-3 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                                <div class="mt-2 text-sm text-green-700">
+                                    현재 선택된 수업: ${classList.find(cls => cls.key === state.selectedClass)?.display}
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            <div class="bg-blue-50 p-4 rounded-lg mb-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <span class="text-sm text-gray-600">등록 회원: </span>
+                                        <span class="text-lg font-bold text-blue-600">${getCurrentMembers().length}명</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-sm text-gray-600">출석률: </span>
+                                        <span class="text-lg font-bold text-blue-600">${stats.present}/${stats.total}</span>
+                                        <span class="text-sm text-gray-600 ml-2">(${stats.rate}%)</span>
+                                    </div>
+                                    <button
+                                        onclick="selectAll()"
+                                        class="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                                    >
+                                        전체 ${Object.values(state.attendance).every(Boolean) ? '해제' : '선택'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 출석 체크 -->
+                        <div class="bg-white rounded-lg shadow-md p-6">
+                            <div class="flex justify-between items-center mb-6">
+                                <h2 class="text-xl font-semibold text-gray-800">
+                                    ${classList.find(cls => cls.key === state.selectedClass)?.display} - ${state.selectedDate} (${getDayOfWeek(state.selectedDate)})
+                                </h2>
+                                <div class="flex gap-2">
+                                    <button
+                                        onclick="state.showAttendanceList = !state.showAttendanceList; render();"
+                                        class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                                    >
+                                        <i data-lucide="list" class="w-4 h-4"></i>
+                                        출석 명단
+                                    </button>
+                                    <button
+                                        onclick="saveAttendance()"
+                                        class="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                    >
+                                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                        출석 저장
+                                    </button>
+                                </div>
+                            </div>
+
+                            ${state.showAttendanceList ? `
+                            <!-- 출석 명단 -->
+                            <div class="mb-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                                <div class="flex justify-between items-center mb-3">
+                                    <h3 class="text-lg font-semibold text-purple-800">
+                                        출석 회원 명단 (${getAttendedMembers().length}명)
+                                    </h3>
+                                    <button
+                                        onclick="copyAttendanceList()"
+                                        class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                                    >
+                                        <i data-lucide="copy" class="w-4 h-4"></i>
+                                        명단 복사
+                                    </button>
+                                </div>
+                                
+                                <div class="bg-white p-4 rounded border">
+                                    <div class="text-sm text-gray-600 mb-2">
+                                        수업: ${classList.find(cls => cls.key === state.selectedClass)?.display}
+                                    </div>
+                                    <div class="text-sm text-gray-600 mb-3">
+                                        날짜: ${state.selectedDate} (${getDayOfWeek(state.selectedDate)})
+                                    </div>
+                                    
+                                    ${getAttendedMembers().length > 0 ? `
+                                        <div class="font-mono text-sm bg-gray-50 p-3 rounded border max-h-60 overflow-y-auto">
+                                            ${getAttendedMembers().map(member => `<div class="py-1">${member}</div>`).join('')}
+                                        </div>
+                                    ` : `
+                                        <div class="text-gray-500 text-center py-4">
+                                            출석한 회원이 없습니다.
+                                        </div>
+                                    `}
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                ${getSortedMembers().map((member, index) => `
+                                    <div
+                                        onclick="toggleAttendance('${member}')"
+                                        class="flex items-center justify-between p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                                            state.attendance[member]
+                                                ? 'border-green-500 bg-green-50'
+                                                : 'border-gray-200 bg-white hover:border-gray-300'
+                                        }"
+                                    >
+                                        <span class="font-medium ${
+                                            state.attendance[member] ? 'text-green-700' : 'text-gray-700'
+                                        }">
+                                            ${member}
+                                        </span>
+                                        <div class="flex items-center gap-2">
+                                            <div class="w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                                state.attendance[member]
+                                                    ? 'border-green-500 bg-green-500'
+                                                    : 'border-gray-300'
+                                            }">
+                                                ${state.attendance[member] ? '<i data-lucide="check-circle" class="w-4 h-4 text-white"></i>' : ''}
+                                            </div>
+                                            <button
+                                                onclick="event.stopPropagation(); removeMember('${member}');"
+                                                class="p-1 text-red-500 hover:bg-red-50 rounded transition-opacity"
+                                                title="회원 삭제"
+                                            >
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+
+                            ${getCurrentMembers().length === 0 ? `
+                                <div class="text-center py-12 text-gray-500">
+                                    이 수업에 등록된 회원이 없습니다.
+                                </div>
+                            ` : ''}
+                        </div>
+                        ` : `
+                        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+                            <i data-lucide="users" class="w-16 h-16 text-gray-400 mx-auto mb-4"></i>
+                            <p class="text-gray-500 text-lg">
+                                날짜와 수업을 선택하면 출석 체크를 시작할 수 있습니다.
+                            </p>
+                        </div>
+                        `}
+                    </div>
+                </div>
+            `;
+
+            // 아이콘 초기화
+            lucide.createIcons();
+        }
+
+        // 초기 렌더링
+        render();
+    </script>
+</body>
+</html>
