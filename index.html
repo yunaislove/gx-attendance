@@ -59,6 +59,54 @@
             localStorage.setItem('attendanceHistory', JSON.stringify(state.attendanceHistory));
         }
 
+        // 🆕 데이터 백업 (다운로드)
+        function backupData() {
+            const backupData = {
+                classMembers: classMembers,
+                attendanceHistory: state.attendanceHistory,
+                backupDate: new Date().toISOString(),
+                version: "1.0"
+            };
+            
+            const dataStr = JSON.stringify(backupData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `헬스장출석데이터_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            alert('백업 파일이 다운로드되었습니다! 📱↔️💻');
+        }
+
+        // 🆕 데이터 복원 (업로드)
+        function restoreData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const backupData = JSON.parse(e.target.result);
+                    
+                    if (confirm('기존 데이터가 모두 바뀝니다. 복원하시겠습니까?')) {
+                        classMembers = backupData.classMembers || classMembers;
+                        state.attendanceHistory = backupData.attendanceHistory || {};
+                        
+                        saveData();
+                        alert('데이터가 복원되었습니다! ✅');
+                        render();
+                    }
+                } catch (error) {
+                    alert('잘못된 백업 파일입니다. 다시 시도해주세요.');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 파일 선택 초기화
+            event.target.value = '';
+        }
+
         // 수업 목록 생성
         function getClassList() {
             return Object.keys(classMembers).map(key => {
@@ -212,9 +260,29 @@
                     <div class="max-w-4xl mx-auto">
                         <!-- 헤더 -->
                         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div class="flex items-center gap-3 mb-6">
-                                <i data-lucide="users" class="w-8 h-8 text-blue-600"></i>
-                                <h1 class="text-2xl font-bold text-gray-800">그룹수업 출석관리</h1>
+                            <div class="flex items-center justify-between mb-6">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="users" class="w-8 h-8 text-blue-600"></i>
+                                    <h1 class="text-2xl font-bold text-gray-800">그룹수업 출석관리</h1>
+                                </div>
+                                
+                                <!-- 🆕 백업/복원 버튼 -->
+                                <div class="flex gap-2">
+                                    <button
+                                        onclick="backupData()"
+                                        class="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                                        title="데이터 백업 (다운로드)"
+                                    >
+                                        <i data-lucide="download" class="w-4 h-4"></i>
+                                        백업
+                                    </button>
+                                    <label class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm cursor-pointer"
+                                           title="데이터 복원 (업로드)">
+                                        <i data-lucide="upload" class="w-4 h-4"></i>
+                                        복원
+                                        <input type="file" accept=".json" onchange="restoreData(event)" class="hidden" />
+                                    </label>
+                                </div>
                             </div>
 
                             <!-- 날짜 및 수업 선택 -->
@@ -433,6 +501,27 @@
                             <p class="text-gray-500 text-lg">
                                 날짜와 수업을 선택하면 출석 체크를 시작할 수 있습니다.
                             </p>
+                            
+                            <!-- 🆕 백업/복원 안내 -->
+                            <div class="mt-8 p-4 bg-blue-50 rounded-lg text-left">
+                                <h3 class="text-lg font-semibold text-blue-800 mb-2">
+                                    📱↔️💻 모바일-웹 데이터 동기화 방법
+                                </h3>
+                                <div class="text-sm text-blue-700 space-y-2">
+                                    <div class="flex items-start gap-2">
+                                        <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold">1단계</span>
+                                        <span>모바일에서 <strong class="text-green-600">백업</strong> 버튼을 눌러 파일 저장</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs font-bold">2단계</span>
+                                        <span>웹에서 <strong class="text-blue-600">복원</strong> 버튼을 눌러 파일 업로드</span>
+                                    </div>
+                                    <div class="flex items-start gap-2">
+                                        <span class="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-bold">완료</span>
+                                        <span>모든 기기에서 동일한 데이터 사용 가능! 🎉</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         `}
                     </div>
